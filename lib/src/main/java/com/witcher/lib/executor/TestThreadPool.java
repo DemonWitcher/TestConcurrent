@@ -11,8 +11,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class TestThreadPool {
-    //优先走核心线程
-    //SynchronousQueue     超过任务上限就被拒绝 优先核心 核心不足 用存活的工作线程 再不足 创建新工作线程
+
+    //SynchronousQueue     优先核心 核心不足 用存活的工作线程 没有 就创建新工作线程 超过工作线程上限就进拒绝
     //LinkedBlockingQueue  优先核心 核心不足 进入队列等待 队列满了 用存活的工作线程 没有 就创建新工作线程 超过工作线程上限就进拒绝
     // ArrayBlockingQueue
     public static void main(String[] args) {
