@@ -4,16 +4,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class TestThreadPool {
     //优先走核心线程
-    //SynchronousQueue 超过任务上限就被拒绝  优先启用核心线程 不足就创建新的
-    // LinkedBlockingQueue 超过核心数量就进队列等着 全部都用核心线程 不足就进队列等着 上限无效
+    //SynchronousQueue     超过任务上限就被拒绝 优先核心 核心不足 用存活的工作线程 再不足 创建新工作线程
+    //LinkedBlockingQueue  优先核心 核心不足 进入队列等待 队列满了 用存活的工作线程 没有 就创建新工作线程 超过工作线程上限就进拒绝
     // ArrayBlockingQueue
     public static void main(String[] args) {
         //1个核心线程 0个非核心 LinkedBlockingQueue                  单任务线程池
@@ -27,8 +27,8 @@ public class TestThreadPool {
         //这是什么鬼东西  和threadPoolExecutor不是一个套路
         ExecutorService executorService5 = Executors.newWorkStealingPool();
         //构造函数 SynchronousQueue不保留任务 超过的全进RejectedExecutionHandler  LinkedBlockingQueue
-        ExecutorService executorService6 = new ThreadPoolExecutor(3, 5,
-                0, TimeUnit.MILLISECONDS, new SynchronousQueue<>(), new ThreadFactory() {
+        ExecutorService executorService6 = new ThreadPoolExecutor(20, 20,
+                3, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 System.out.println("创建了一个新线程");
@@ -42,7 +42,7 @@ public class TestThreadPool {
                     @Override
                     public void run() {
                         try {
-                            Thread.sleep(6000);
+                            Thread.sleep(7000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
