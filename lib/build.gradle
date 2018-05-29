@@ -1,0 +1,5 @@
+apply plugin: 'java-library'
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
