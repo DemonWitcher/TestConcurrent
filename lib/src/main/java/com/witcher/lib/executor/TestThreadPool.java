@@ -11,8 +11,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class TestThreadPool {
-
-    //SynchronousQueue 不保留任务的队列  LinkedBlockingQueue保留任务的队列 ArrayBlockingQueue
+    //优先走核心线程
+    //SynchronousQueue 超过任务上限就被拒绝  优先启用核心线程 不足就创建新的
+    // LinkedBlockingQueue 超过核心数量就进队列等着 全部都用核心线程 不足就进队列等着 上限无效
+    // ArrayBlockingQueue
     public static void main(String[] args) {
         //1个核心线程 0个非核心 LinkedBlockingQueue                  单任务线程池
         ExecutorService executorService1 = Executors.newSingleThreadExecutor();
@@ -25,21 +27,34 @@ public class TestThreadPool {
         //这是什么鬼东西  和threadPoolExecutor不是一个套路
         ExecutorService executorService5 = Executors.newWorkStealingPool();
         //构造函数 SynchronousQueue不保留任务 超过的全进RejectedExecutionHandler  LinkedBlockingQueue
-        ExecutorService executorService6 = new ThreadPoolExecutor(0, 3,
-                10, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactory() {
+        ExecutorService executorService6 = new ThreadPoolExecutor(3, 5,
+                0, TimeUnit.MILLISECONDS, new SynchronousQueue<>(), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
+                System.out.println("创建了一个新线程");
                 return new Thread(r);
             }
         }, new RejectedExecutionHandler() {
             @Override
             public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
                 System.out.println(r.toString()+"任务被拒绝执行");
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(6000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println(r.toString()+"二进宫");
+                        executor.execute(r);
+                    }
+                }).start();
             }
         });
 
         for(int i=0;i<10;++i){
-            executorService4.submit(new WorkRunnable("工作任务"+i+"号"));
+            executorService6.submit(new WorkRunnable("工作任务"+i+"号"));
         }
     }
 
